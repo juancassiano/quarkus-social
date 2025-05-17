@@ -17,6 +17,10 @@ GET http://localhost:8080/users
 
 
 ###
+GET http://localhost:8080/users/{{userId}}
+
+
+###
 PUT http://localhost:8080/users/{{userId}}
 Content-Type: application/json
 

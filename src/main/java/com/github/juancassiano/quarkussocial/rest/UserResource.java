@@ -1,9 +1,11 @@
 package com.github.juancassiano.quarkussocial.rest;
 
 import com.github.juancassiano.quarkussocial.domain.model.User;
+import com.github.juancassiano.quarkussocial.domain.repository.UserRepository;
 import com.github.juancassiano.quarkussocial.rest.dto.CreateUserRequest;
 
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -20,6 +22,13 @@ import jakarta.ws.rs.core.Response;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource {
+
+  private final UserRepository userRepository;
+  
+  @Inject
+  public UserResource(UserRepository userRepository) {
+    this.userRepository = userRepository;
+  }
   
   @POST
   @Transactional
@@ -28,26 +37,36 @@ public class UserResource {
     user.setName(createUserResquest.getName());
     user.setAge(createUserResquest.getAge());
  
-    user.persist();
+    userRepository.persist(user);
      
     return Response.ok(user).build();
   }
 
   @GET
   public Response listAllUsers(){
-    PanacheQuery<User> query = User.findAll();
+    PanacheQuery<User> query = userRepository.findAll();
     return Response.ok(query.list()).build();
+  }
+
+  @GET
+  @Path("/{id}")
+  public Response getUser(@PathParam("id") Long id){
+    User user = userRepository.findById(id);
+    if (user == null) {
+      return Response.status(Response.Status.NOT_FOUND).build();
+    }
+    return Response.ok(user).build();
   }
 
   @DELETE
   @Transactional
   @Path("/{id}")
   public Response deleteUser(@PathParam("id") Long id){
-    User user = User.findById(id);
+    User user = userRepository.findById(id);
     if (user == null) {
       return Response.status(Response.Status.NOT_FOUND).build();
     }
-    user.delete();
+    userRepository.delete(user);
     return Response.noContent().build();
     
   }
@@ -56,13 +75,13 @@ public class UserResource {
   @Path("/{id}")
   @Transactional
   public Response updateUser(@PathParam("id") Long id, CreateUserRequest createUserRequest){
-    User user = User.findById(id);
+    User user = userRepository.findById(id);
     if (user == null) {
       return Response.status(Response.Status.NOT_FOUND).build();
     }
     user.setName(createUserRequest.getName());
     user.setAge(createUserRequest.getAge());
-    user.persist();
+    userRepository.persist(user);
     return Response.ok(user).build();
   }
 }
