@@ -6,3 +6,5 @@ CREATE TABLE USERS (
 	age integer not null
 	
 )
+
+SELECT * FROM USERS
