@@ -1,4 +1,9 @@
 ###
+@userId = {{ createUser.response.body.id}}
+
+
+###
+# @name createUser
 POST http://localhost:8080/users
 Content-Type: application/json
 
@@ -9,3 +14,16 @@ Content-Type: application/json
 
 ###
 GET http://localhost:8080/users
+
+
+###
+PUT http://localhost:8080/users/{{userId}}
+Content-Type: application/json
+
+{
+  "name": "Ze Jose",
+  "age": 30
+}
+
+###
+DELETE http://localhost:8080/users/{{userId}}
