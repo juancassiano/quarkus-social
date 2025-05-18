@@ -1,5 +1,8 @@
 package com.github.juancassiano.quarkussocial.rest;
 
+import java.util.Set;
+
+
 import com.github.juancassiano.quarkussocial.domain.model.User;
 import com.github.juancassiano.quarkussocial.domain.repository.UserRepository;
 import com.github.juancassiano.quarkussocial.rest.dto.CreateUserRequest;
@@ -7,6 +10,8 @@ import com.github.juancassiano.quarkussocial.rest.dto.CreateUserRequest;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -23,16 +28,28 @@ import jakarta.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource {
 
-  private final UserRepository userRepository;
+  private UserRepository userRepository;
+  private Validator validator;
   
   @Inject
-  public UserResource(UserRepository userRepository) {
+  public UserResource(UserRepository userRepository, Validator validator) {
     this.userRepository = userRepository;
+    this.validator = validator;
   }
   
   @POST
   @Transactional
   public Response createUser(CreateUserRequest createUserResquest){
+
+    Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(createUserResquest);
+    if (!violations.isEmpty()) {
+      return Response.status(Response.Status.BAD_REQUEST)
+          .entity(violations.stream()
+              .map(ConstraintViolation::getMessage)
+              .toList())
+          .build();
+    }
+
     User user = new User();
     user.setName(createUserResquest.getName());
     user.setAge(createUserResquest.getAge());
