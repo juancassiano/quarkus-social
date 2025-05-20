@@ -6,8 +6,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import jakarta.validation.ConstraintViolation;
+import jakarta.ws.rs.core.Response;
 
 public class ResponseError {
+
+  public static final int UNPROCESSABLE_ENTITY_STATUS = 422;
   private String message;
   private Collection<FieldError> errors;
 
@@ -39,5 +42,10 @@ public class ResponseError {
     this.errors = errors;
   }
   
+  public Response withStatusCode(int statusCode) {
+    return Response.status(statusCode)
+        .entity(this)
+        .build();
+  }
   
 }
