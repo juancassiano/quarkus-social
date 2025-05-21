@@ -62,7 +62,8 @@ public class PostResource {
       return Response.status(Response.Status.NOT_FOUND).build();
     }
 
-    PanacheQuery<Post> postQuery = postRepository.find("user", user);
+    PanacheQuery<Post> postQuery = postRepository.find("user",user);
+    
     if (postQuery == null){
       return Response.status(Response.Status.NOT_FOUND).build();
     }
