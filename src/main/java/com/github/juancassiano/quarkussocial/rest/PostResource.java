@@ -1,9 +1,24 @@
 package com.github.juancassiano.quarkussocial.rest;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.github.juancassiano.quarkussocial.domain.model.Post;
+import com.github.juancassiano.quarkussocial.domain.model.User;
+import com.github.juancassiano.quarkussocial.domain.repository.PostRepository;
+import com.github.juancassiano.quarkussocial.domain.repository.UserRepository;
+import com.github.juancassiano.quarkussocial.rest.dto.CreatePostRequest;
+import com.github.juancassiano.quarkussocial.rest.dto.PostResponse;
+
+import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -13,13 +28,51 @@ import jakarta.ws.rs.core.Response;
 @Produces(MediaType.APPLICATION_JSON)
 public class PostResource {
 
+  private UserRepository userRepository;
+  private PostRepository postRepository;
+
+  @Inject
+  public PostResource(UserRepository userRepository, PostRepository postRepository) {
+    this.userRepository = userRepository; 
+    this.postRepository = postRepository;
+
+  }
+
   @POST
-  public Response createPost(){
-    return Response.status(Response.Status.CREATED).build();
+  @Transactional
+  public Response createPost(@PathParam("userId") Long userId, CreatePostRequest createPostRequest){
+    if (userRepository.findById(userId) == null){
+      return Response.status(Response.Status.NOT_FOUND).build();
+    }
+    if (createPostRequest.getPost_text() == null || createPostRequest.getPost_text().isEmpty()){
+      return Response.status(Response.Status.BAD_REQUEST).build();
+    }
+
+    Post post = new Post();
+    post.setText(createPostRequest.getPost_text());
+    post.setUser(userRepository.findById(userId));
+    postRepository.persist(post);
+    return Response.status(Response.Status.CREATED).entity(post).build();
   }
 
   @GET
-  public Response listPost(){
-    return Response.ok().build();
+  public Response listPost(@PathParam("userId") Long userId){
+    User user = userRepository.findById(userId);
+    if (user == null){
+      return Response.status(Response.Status.NOT_FOUND).build();
+    }
+
+    PanacheQuery<Post> postQuery = postRepository.find("user", user);
+    if (postQuery == null){
+      return Response.status(Response.Status.NOT_FOUND).build();
+    }
+    List<Post> posts = postQuery.list();
+
+    List<PostResponse> postResponses = posts.stream()
+      .map(PostResponse::fromEntity)
+      .collect(Collectors.toList());
+
+    return Response.ok(postResponses).build();
+    
   }
 }

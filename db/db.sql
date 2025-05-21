@@ -1,4 +1,4 @@
-CREATE TABLE quarkus_social;
+CREATE DATABASE quarkus_social;
 
 CREATE TABLE USERS (
 	id bigserial not null primary key,
@@ -8,3 +8,13 @@ CREATE TABLE USERS (
 )
 
 SELECT * FROM USERS
+
+CREATE TABLE POSTS (
+	id bigserial not null primary key,
+	post_text varchar(150) not null,
+	dateTime timestamp not null,
+	user_id bigint not null,
+	foreign key (user_id) references USERS(id)
+)
+
+SELECT * FROM POSTS

@@ -42,8 +42,7 @@ POST http://localhost:8080/users/{{userId}}/posts
 Content-Type: application/json
 
 {
-  "name": "John Doe",
-  "age": 30
+  "post_text": "Hello World"
 }
 
 ###
