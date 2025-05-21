@@ -1,8 +1,9 @@
 package com.github.juancassiano.quarkussocial.rest;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+
 
 import com.github.juancassiano.quarkussocial.domain.model.Post;
 import com.github.juancassiano.quarkussocial.domain.model.User;
@@ -10,10 +11,13 @@ import com.github.juancassiano.quarkussocial.domain.repository.PostRepository;
 import com.github.juancassiano.quarkussocial.domain.repository.UserRepository;
 import com.github.juancassiano.quarkussocial.rest.dto.CreatePostRequest;
 import com.github.juancassiano.quarkussocial.rest.dto.PostResponse;
+import com.github.juancassiano.quarkussocial.rest.dto.ResponseError;
 
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -30,9 +34,11 @@ public class PostResource {
 
   private UserRepository userRepository;
   private PostRepository postRepository;
+  private Validator validator;
 
   @Inject
-  public PostResource(UserRepository userRepository, PostRepository postRepository) {
+  public PostResource(UserRepository userRepository, PostRepository postRepository, Validator validator) {
+    this.validator = validator;
     this.userRepository = userRepository; 
     this.postRepository = postRepository;
 
@@ -41,16 +47,20 @@ public class PostResource {
   @POST
   @Transactional
   public Response createPost(@PathParam("userId") Long userId, CreatePostRequest createPostRequest){
-    if (userRepository.findById(userId) == null){
-      return Response.status(Response.Status.NOT_FOUND).build();
+            
+    Set<ConstraintViolation<CreatePostRequest>> violations = validator.validate(createPostRequest);
+    if (!violations.isEmpty()) {
+      return ResponseError.createFromValidation(violations).withStatusCode(ResponseError.UNPROCESSABLE_ENTITY_STATUS);
     }
-    if (createPostRequest.getPost_text() == null || createPostRequest.getPost_text().isEmpty()){
-      return Response.status(Response.Status.BAD_REQUEST).build();
+
+    User user = userRepository.findById(userId);
+    if (user == null){
+      return ResponseError.createFromValidation(violations).withStatusCode(ResponseError.NOT_FOUND_STATUS);
     }
 
     Post post = new Post();
     post.setText(createPostRequest.getPost_text());
-    post.setUser(userRepository.findById(userId));
+    post.setUser(user);
     postRepository.persist(post);
     return Response.status(Response.Status.CREATED).entity(post).build();
   }

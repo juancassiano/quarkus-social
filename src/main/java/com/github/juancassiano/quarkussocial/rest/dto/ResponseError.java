@@ -13,6 +13,7 @@ import lombok.Data;
 public class ResponseError {
 
   public static final int UNPROCESSABLE_ENTITY_STATUS = 422;
+  public static final int NOT_FOUND_STATUS = 404;
   private String message;
   private Collection<FieldError> errors;
 
