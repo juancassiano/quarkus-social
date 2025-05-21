@@ -1,6 +1,8 @@
 ###
 @userId = {{ createUser.response.body.id}}
 
+@postId = {{ createPost.response.body.id}}
+
 
 ###
 # @name createUser
@@ -31,3 +33,18 @@ Content-Type: application/json
 
 ###
 DELETE http://localhost:8080/users/{{userId}}
+
+
+
+###
+# @name createPost
+POST http://localhost:8080/users/{{userId}}/posts
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "age": 30
+}
+
+###
+GET http://localhost:8080/users/{{userId}}/posts
