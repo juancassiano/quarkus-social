@@ -47,3 +47,17 @@ Content-Type: application/json
 
 ###
 GET http://localhost:8080/users/{{userId}}/posts
+
+
+
+###
+# @name followUser
+PUT http://localhost:8080/users/{{userId}}/followers
+Content-Type: application/json
+
+{
+  "followerId": 1
+}
+
+###
+GET http://localhost:8080/users/{{userId}}/followers

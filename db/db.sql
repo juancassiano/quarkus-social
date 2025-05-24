@@ -18,3 +18,14 @@ CREATE TABLE POSTS (
 )
 
 SELECT * FROM POSTS
+
+
+CREATE TABLE FOLLOWERS (
+	id bigserial not null primary key,
+	follower_id bigint not null,
+	user_id bigint not null,
+	foreign key (follower_id) references USERS(id),
+	foreign key (user_id) references USERS(id)
+)
+
+SELECT * FROM FOLLOWERS
