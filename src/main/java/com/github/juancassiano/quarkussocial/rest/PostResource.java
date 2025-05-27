@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.github.juancassiano.quarkussocial.domain.model.Post;
 import com.github.juancassiano.quarkussocial.domain.model.User;
+import com.github.juancassiano.quarkussocial.domain.repository.FollowerRepository;
 import com.github.juancassiano.quarkussocial.domain.repository.PostRepository;
 import com.github.juancassiano.quarkussocial.domain.repository.UserRepository;
 import com.github.juancassiano.quarkussocial.rest.dto.CreatePostRequest;
@@ -20,6 +21,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -34,13 +36,16 @@ public class PostResource {
 
   private UserRepository userRepository;
   private PostRepository postRepository;
+  private FollowerRepository followerRepository;
+
   private Validator validator;
 
   @Inject
-  public PostResource(UserRepository userRepository, PostRepository postRepository, Validator validator) {
+  public PostResource(UserRepository userRepository, FollowerRepository followerRepository,PostRepository postRepository, Validator validator) {
     this.validator = validator;
     this.userRepository = userRepository; 
     this.postRepository = postRepository;
+    this.followerRepository = followerRepository;
 
   }
 
@@ -66,10 +71,18 @@ public class PostResource {
   }
 
   @GET
-  public Response listPost(@PathParam("userId") Long userId){
+  public Response listPost(@PathParam("userId") Long userId, @HeaderParam("followerId") Long followerId) {
     User user = userRepository.findById(userId);
     if (user == null){
       return Response.status(Response.Status.NOT_FOUND).build();
+    }
+    User follower = userRepository.findById(followerId);
+    if (follower == null) {
+      return Response.status(Response.Status.NOT_FOUND).build();
+    }
+
+    if(!followerRepository.follows(follower, user)) {
+      return Response.status(Response.Status.FORBIDDEN).entity("You must follow the user to see their posts").build();
     }
 
     PanacheQuery<Post> postQuery = postRepository.find("user",user);

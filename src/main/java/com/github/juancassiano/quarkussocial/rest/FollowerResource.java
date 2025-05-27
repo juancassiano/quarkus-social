@@ -17,11 +17,13 @@ import com.github.juancassiano.quarkussocial.rest.dto.FollowerResponse;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -85,6 +87,29 @@ public class FollowerResource {
     responseUsers.setContent(followerList);
 
     return Response.ok(responseUsers).build();
+  }
+
+  @DELETE
+  @Transactional
+  public Response unfollowerUser(@PathParam("userId") Long userId, @QueryParam("followerId") Long followerId) {
+    User user = userRepository.findById(userId);
+    if (user == null) {
+      return Response.status(Response.Status.NOT_FOUND).build();
+    }
+    if (followerId == null) {
+      return Response.status(Response.Status.BAD_REQUEST).entity("Follower ID must be provided").build();
+    }
+    
+    User follower = userRepository.findById(followerId);
+    if (follower == null) {
+      return Response.status(Response.Status.NOT_FOUND).build();
+    }
+    if (!followerRepository.follows(follower, user)) {
+        return Response.status(Response.Status.CONFLICT).entity("This user is not following the given user.").build();    }
+
+
+    followerRepository.deleteByFollowerAndUser(followerId, userId);
+    return Response.status(Response.Status.NO_CONTENT).build();
   }
   
 }

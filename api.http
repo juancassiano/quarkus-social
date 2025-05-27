@@ -3,6 +3,8 @@
 
 @postId = {{ createPost.response.body.id}}
 
+@followerId = {{ followUser.response.body.followerId}}
+
 
 ###
 # @name createUser
@@ -47,6 +49,7 @@ Content-Type: application/json
 
 ###
 GET http://localhost:8080/users/{{userId}}/posts
+followerId : {{followerId}}
 
 
 
@@ -61,3 +64,6 @@ Content-Type: application/json
 
 ###
 GET http://localhost:8080/users/{{userId}}/followers
+
+###
+DELETE http://localhost:8080/users/{{userId}}/followers/followers?followerId=1
