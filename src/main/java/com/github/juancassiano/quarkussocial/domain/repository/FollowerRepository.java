@@ -1,5 +1,6 @@
 package com.github.juancassiano.quarkussocial.domain.repository;
 
+import java.util.List;
 import java.util.Map;
 
 import com.github.juancassiano.quarkussocial.domain.model.Follower;
@@ -21,4 +22,7 @@ public class FollowerRepository implements PanacheRepository<Follower> {
     return find("follower =:follower and user =:user", params).firstResultOptional().isPresent();
   }
   
+  public List<Follower> findByUser(Long userId) {
+    return find("user.id", userId).list();
+  }
 }

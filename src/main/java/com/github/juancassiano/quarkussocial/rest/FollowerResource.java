@@ -1,15 +1,23 @@
 package com.github.juancassiano.quarkussocial.rest;
 
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.eclipse.microprofile.reactive.streams.operators.spi.Stage.Collect;
+
 import com.github.juancassiano.quarkussocial.domain.model.Follower;
 import com.github.juancassiano.quarkussocial.domain.model.User;
 import com.github.juancassiano.quarkussocial.domain.repository.FollowerRepository;
 import com.github.juancassiano.quarkussocial.domain.repository.UserRepository;
+import com.github.juancassiano.quarkussocial.rest.dto.FollowerPerUserResponse;
 import com.github.juancassiano.quarkussocial.rest.dto.FollowerRequest;
+import com.github.juancassiano.quarkussocial.rest.dto.FollowerResponse;
 
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -58,6 +66,25 @@ public class FollowerResource {
     followerRepository.persist(follower);
     
     return Response.status(Response.Status.NO_CONTENT).entity(follower).build();
+  }
+
+  @GET
+  public Response listFollowers(@PathParam("userId") Long userId){
+    User user = userRepository.findById(userId);
+    if (user == null) {
+      return Response.status(Response.Status.NOT_FOUND).build();
+    }
+
+    List<Follower> followers = followerRepository.findByUser(userId);
+    FollowerPerUserResponse responseUsers = new FollowerPerUserResponse();
+    responseUsers.setCount(followers.size());
+    
+    List<FollowerResponse> followerList = followers.stream()
+        .map(FollowerResponse::new).collect(Collectors.toList());
+
+    responseUsers.setContent(followerList);
+
+    return Response.ok(responseUsers).build();
   }
   
 }
