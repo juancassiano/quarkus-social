@@ -1,27 +1,40 @@
 package com.github.juancassiano.quarkussocial.rest;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+
 import com.github.juancassiano.quarkussocial.rest.dto.CreateUserRequest;
 import com.github.juancassiano.quarkussocial.rest.dto.ResponseError;
 
+import io.quarkus.test.common.http.TestHTTPResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.lang.reflect.Method;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 
 @QuarkusTest
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UserResourceTest {
+
+  @TestHTTPResource("/users")
+  URL apiUrl;
   
   @Test()
   @DisplayName("Should create a user successfully")
+  @Order(1)
   public void testCreateUser() {
     CreateUserRequest user = new CreateUserRequest();
     user.setName("John Doe");
@@ -35,7 +48,7 @@ public class UserResourceTest {
           .contentType(ContentType.JSON)
           .body(user)
         .when()
-          .post("/users")
+          .post(apiUrl)
         .then()
           .extract()
           .response();
@@ -49,6 +62,7 @@ public class UserResourceTest {
 
   @Test()
   @DisplayName("Should return 422 for invalid user creation request")
+  @Order(2)
   public void testCreateUserInvalidRequest() {
     CreateUserRequest user = new CreateUserRequest();
     user.setName(""); // Invalid name
@@ -59,7 +73,7 @@ public class UserResourceTest {
           .contentType(ContentType.JSON)
           .body(user)
         .when()
-          .post("/users")
+          .post(apiUrl)
         .then()
           .extract()
           .response();
@@ -73,4 +87,22 @@ public class UserResourceTest {
     assertEquals("Age cannot be null", errors.get(0).get("message"));
     assertEquals("Name cannot be blank", errors.get(1).get("message"));
   }
+
+
+  @Test()
+  @DisplayName("Should list all users")
+  @Order(3)
+  public void testListAllUsers() {
+    
+
+        given()
+          .contentType(ContentType.JSON)
+        .when()
+          .get(apiUrl)
+        .then()
+          .statusCode(200)
+          .body("size()", Matchers.is(1)); // Assuming there are users in the database
+
+  }
+
 }
