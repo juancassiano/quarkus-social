@@ -76,9 +76,13 @@ public class PostResource {
     if (user == null){
       return Response.status(Response.Status.NOT_FOUND).build();
     }
+    if( followerId == null) {
+      return Response.status(Response.Status.BAD_REQUEST).entity("Follower ID must be provided").build();
+    }
+    
     User follower = userRepository.findById(followerId);
     if (follower == null) {
-      return Response.status(Response.Status.NOT_FOUND).build();
+      return Response.status(Response.Status.BAD_REQUEST).entity("Inexistent followerId").build();
     }
 
     if(!followerRepository.follows(follower, user)) {

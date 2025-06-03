@@ -7,7 +7,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.github.juancassiano.quarkussocial.domain.model.Follower;
+import com.github.juancassiano.quarkussocial.domain.model.Post;
 import com.github.juancassiano.quarkussocial.domain.model.User;
+import com.github.juancassiano.quarkussocial.domain.repository.FollowerRepository;
+import com.github.juancassiano.quarkussocial.domain.repository.PostRepository;
 import com.github.juancassiano.quarkussocial.domain.repository.UserRepository;
 import com.github.juancassiano.quarkussocial.rest.dto.CreatePostRequest;
 
@@ -23,7 +27,14 @@ class PostResourceTest {
 
   @Inject
   UserRepository userRepository;
+  @Inject
+  FollowerRepository followerRepository;
+  @Inject
+  PostRepository postRepository;
+
   Long userId;
+  Long userNotFollowerId;
+  Long userFollowerId;
 
   @BeforeEach
   @Transactional
@@ -33,6 +44,28 @@ class PostResourceTest {
     user.setAge(25);
     userRepository.persist(user);
     userId = user.getId();
+
+    User userNotFollower = new User();
+    userNotFollower.setName("Test User Not Follower");
+    userNotFollower.setAge(30);
+    userRepository.persist(userNotFollower);
+    userNotFollowerId = userNotFollower.getId();
+
+    User userFollower = new User();
+    userFollower.setName("Test User Not Follower");
+    userFollower.setAge(30);
+    userRepository.persist(userFollower);
+    userFollowerId = userFollower.getId();
+
+    Follower follower = new Follower();
+    follower.setUser(user);
+    follower.setFollower(userFollower);
+    followerRepository.persist(follower);
+
+    Post post = new Post();
+    post.setText("This is a test post");
+    post.setUser(user);
+    postRepository.persist(post);
   }
 
   @Test
@@ -86,18 +119,57 @@ class PostResourceTest {
   @Test
   @DisplayName("Should return 400 when followerId header is not present")
   public void listPostFollowerHeaderNotSendTest(){
-    
+
+    given()
+      .pathParam("userId", userId)
+    .when()
+      .get()
+    .then()
+      .statusCode(400)
+      .body(Matchers.is("Follower ID must be provided"));
   }
+
 
   @Test
   @DisplayName("Should return 400 when follower does not exist")
-  public void listPostFollowerHeaderNotExistTest(){}
+  public void listPostFollowerNotFountTest(){
+    Long inexistentFollowerId = 999L;
+
+    given()
+      .pathParam("userId", userId)
+      .header("followerId", inexistentFollowerId)
+    .when()
+      .get()
+    .then()
+      .statusCode(400)
+      .body(Matchers.is("Inexistent followerId"));
+  }
+
 
   @Test
   @DisplayName("Should return 403 when follower is not following the user")
-  public void listPostNotAFollowerTest() {}
+  public void listPostNotAFollowerTest() {
+    given()
+      .pathParam("userId", userId)
+      .header("followerId", userNotFollowerId)
+    .when()
+      .get()
+    .then()
+      .statusCode(403)
+      .body(Matchers.is("You must follow the user to see their posts"));
+  }
 
   @Test
   @DisplayName("Should return a list of posts when follower is following the user")
-  public void listPostTest(){}
+  public void listPostTest(){
+
+    given()
+      .pathParam("userId", userId)
+      .header("followerId", userFollowerId)
+    .when()
+      .get()
+    .then()
+      .statusCode(200)
+      .body("size()", Matchers.is(1)); // Assuming there are posts for the user
+  }
 }
