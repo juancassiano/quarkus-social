@@ -4,8 +4,6 @@ package com.github.juancassiano.quarkussocial.rest;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.eclipse.microprofile.reactive.streams.operators.spi.Stage.Collect;
-
 import com.github.juancassiano.quarkussocial.domain.model.Follower;
 import com.github.juancassiano.quarkussocial.domain.model.User;
 import com.github.juancassiano.quarkussocial.domain.repository.FollowerRepository;
